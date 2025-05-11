@@ -81,6 +81,7 @@
     const scriptURL = "https://script.google.com/macros/s/AKfycbxO-ffXc6d4C7VvWIuPAQwX-E8vqvnnzKlgPR3xargd2s4UITwjvOYtOTrCL6lejR2L/exec";
     let isSpecialCode = false;
     let reservedNextCode = null;
+    let originalCode = "";
 
     function verifyCode() {
       const code = document.getElementById("accessCode").value.trim();
@@ -95,6 +96,8 @@
         if (data.status === "valid") {
           isSpecialCode = data.isSpecial || false;
           reservedNextCode = data.nextCode || null;
+          originalCode = code;
+
           document.getElementById("codeSection").classList.add("hidden");
           document.getElementById("rsvpSection").classList.remove("hidden");
         } else {
@@ -116,15 +119,21 @@
 
       fetch(scriptURL, {
         method: 'POST',
-        body: JSON.stringify({ action: "rsvp", name, phone, isSpecial: isSpecialCode })
+        body: JSON.stringify({
+          action: "rsvp",
+          name,
+          phone,
+          isSpecial: isSpecialCode,
+          usedCode: originalCode
+        })
       })
       .then(res => res.json())
       .then(data => {
         document.getElementById("rsvpSection").classList.add("hidden");
         document.getElementById("finalSection").classList.remove("hidden");
 
-        if (reservedNextCode || data.nextCode) {
-          const nextCode = reservedNextCode || data.nextCode;
+        const nextCode = reservedNextCode || data.nextCode;
+        if (nextCode) {
           document.getElementById("nextCodeDisplay").innerText = nextCode;
           document.getElementById("shareCodeDiv").classList.remove("hidden");
         }
