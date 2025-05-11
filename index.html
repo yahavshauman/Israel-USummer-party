@@ -1,160 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Israel/USummer Party RSVP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #ffffff; /* White background */
-            color: #333333; /* Dark gray text */
-        }
-
-        h1 {
-            text-align: center;
-            margin-top: 50px;
-            color: #007BFF; /* Blue color */
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .form-container, .rsvp {
-            max-width: 400px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        input[type="text"], button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        button {
-            background-color: #007BFF; /* Blue button */
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3; /* Darker blue on hover */
-        }
-
-        #error {
-            color: red;
-        }
-
-        .hidden-info {
-            font-weight: bold;
-            text-decoration: line-through;
-            text-align: center;
-            margin-top: 20px;
-        }
- }
-    </style>
+  <title>Israel/USummer Party</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      background-color: white;
+      font-family: Arial, sans-serif;
+      color: #222;
+      text-align: center;
+      padding: 50px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 250px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+    .hidden {
+      display: none;
+    }
+    .strikethrough {
+      text-decoration: line-through;
+      font-weight: bold;
+    }
+    .blue {
+      color: #007bff;
+      font-weight: bold;
+    }
+    .card {
+      max-width: 400px;
+      margin: auto;
+      border: 1px solid #ccc;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Israel/USummer Party</h1>
-    <p style="text-align: center; color: #007BFF;">Enter your unique code to RSVP:</p>
-    
-    <!-- Code Input Section -->
-    <div style="text-align: center;">
-        <input type="text" id="codeInput" placeholder="Enter your code here">
-        <button onclick="checkCode()">Submit Code</button>
-        <p id="error"></p> <!-- Error message will show here -->
+  <div class="card" id="codeSection">
+    <h2 class="blue">Israel/USummer Party</h2>
+    <p>Enter your exclusive access code:</p>
+    <input type="text" id="accessCode" placeholder="Enter code..." />
+    <br>
+    <button onclick="verifyCode()">Submit</button>
+    <p id="codeError" style="color: red;"></p>
+  </div>
+
+  <div class="card hidden" id="rsvpSection">
+    <h2 class="blue">RSVP</h2>
+    <input type="text" id="name" placeholder="Your Name" /><br>
+    <input type="tel" id="phone" placeholder="Your Phone Number" /><br>
+    <button onclick="submitRSVP()">RSVP</button>
+    <p id="rsvpError" style="color: red;"></p>
+  </div>
+
+  <div class="card hidden" id="finalSection">
+    <h2 class="blue">You're In!</h2>
+    <p><span class="strikethrough">Date: [Undisclosed]</span></p>
+    <p><span class="strikethrough">Location: [Undisclosed]</span></p>
+    <p><strong>🎉 Join the WhatsApp group:</strong><br>
+      <a class="blue" href="https://chat.whatsapp.com/Ge9tZ5W0jiA5nOW6tdeWRI" target="_blank">Click here to join</a>
+    </p>
+    <div id="shareCodeDiv" class="hidden">
+      <p><strong>Send this code to your invitee:</strong><br>
+      <span class="blue" id="nextCodeDisplay"></span></p>
     </div>
-    
-    <!-- RSVP Form: Hidden initially -->
-    <div class="form-container hidden">
-        <h3>Please RSVP</h3>
-        <form id="rsvpForm">
-            <label for="name">Your Name:</label><br>
-            <input type="text" id="name" name="name" required><br><br>
+  </div>
 
-            <label for="phone">Phone Number:</label><br>
-            <input type="text" id="phone" name="phone" required><br><br>
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxO-ffXc6d4C7VvWIuPAQwX-E8vqvnnzKlgPR3xargd2s4UITwjvOYtOTrCL6lejR2L/exec";
+    let isSpecialCode = false;
+    let reservedNextCode = null;
 
-            <button type="submit">RSVP</button>
-        </form>
-    </div>
+    function verifyCode() {
+      const code = document.getElementById("accessCode").value.trim();
+      if (!code) return;
 
-    <!-- Special RSVP Page: Hidden initially -->
-    <div class="rsvp hidden">
-        <h3>Special Experience</h3>
-        <p>Congratulations! You have a special code and are invited to the party!</p>
-    </div>
-
-    <!-- Hidden Info (Date and Location) -->
-    <div class="hidden-info">
-        <p>Date and Location: <span>Undisclosed</span></p>
-    </div>
-
-    <!-- Your JavaScript -->
-    <script>
-        // Check code function that fetches from Apps Script
-        function checkCode() {
-            var code = document.getElementById("codeInput").value;
-            var errorElement = document.getElementById("error");
-
-            // Send code to the Apps Script
-            fetch(`https://script.google.com/macros/s/AKfycbxO-ffXc6d4C7VvWIuPAQwX-E8vqvnnzKlgPR3xargd2s4UITwjvOYtOTrCL6lejR2L/exec?code=${code}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.valid) {
-                        if (data.special) {
-                            // If it's a special code, handle it differently
-                            document.querySelector(".rsvp").classList.remove("hidden");
-                            document.querySelector(".rsvp").innerHTML = `<h3>Welcome to the special experience!</h3><p>Enjoy the party!</p>`;
-                        } else {
-                            // Regular code validation, show RSVP form
-                            document.querySelector(".form-container").classList.remove("hidden");
-                            document.querySelector(".form-container").classList.add("visible");
-                            document.getElementById("error").textContent = "";
-
-                            // Store the new code for the next person to use
-                            window.newCode = data.newCode;
-                        }
-                    } else {
-                        errorElement.textContent = "Invalid code, please try again.";
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ action: "verify", code })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "valid") {
+          isSpecialCode = data.isSpecial || false;
+          reservedNextCode = data.nextCode || null;
+          document.getElementById("codeSection").classList.add("hidden");
+          document.getElementById("rsvpSection").classList.remove("hidden");
+        } else {
+          document.getElementById("codeError").innerText = data.message || "Invalid code.";
         }
+      })
+      .catch(() => {
+        document.getElementById("codeError").innerText = "Error processing request.";
+      });
+    }
 
-        // Handle form submission for RSVP
-        document.getElementById('rsvpForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+    function submitRSVP() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      if (!name || !phone) {
+        document.getElementById("rsvpError").innerText = "Please enter both name and phone.";
+        return;
+      }
 
-            var name = document.getElementById('name').value;
-            var phone = document.getElementById('phone').value;
-            var code = window.newCode;  // Use the new code generated for the next person
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ action: "rsvp", name, phone, isSpecial: isSpecialCode })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("rsvpSection").classList.add("hidden");
+        document.getElementById("finalSection").classList.remove("hidden");
 
-            fetch(`https://script.google.com/macros/s/AKfycbxO-ffXc6d4C7VvWIuPAQwX-E8vqvnnzKlgPR3xargd2s4UITwjvOYtOTrCL6lejR2L/exec?name=${name}&phone=${phone}&code=${code}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Your RSVP has been successfully submitted!');
-                        // Optionally redirect to another page or hide the form
-                    } else {
-                        alert('There was an issue with your submission. Please try again.');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    </script>
+        if (reservedNextCode || data.nextCode) {
+          const nextCode = reservedNextCode || data.nextCode;
+          document.getElementById("nextCodeDisplay").innerText = nextCode;
+          document.getElementById("shareCodeDiv").classList.remove("hidden");
+        }
+      })
+      .catch(() => {
+        document.getElementById("rsvpError").innerText = "Error submitting RSVP.";
+      });
+    }
+  </script>
 
 </body>
 </html>
