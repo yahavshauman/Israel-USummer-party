@@ -47,17 +47,9 @@
 </head>
 <body>
 
-  <div class="card" id="codeSection">
+  <div class="card" id="rsvpSection">
     <h2 class="blue">Israel/USummer Party</h2>
-    <p>Enter your exclusive access code:</p>
-    <input type="text" id="accessCode" placeholder="Enter code..." />
-    <br>
-    <button onclick="verifyCode()">Submit</button>
-    <p id="codeError" style="color: red;"></p>
-  </div>
-
-  <div class="card hidden" id="rsvpSection">
-    <h2 class="blue">RSVP</h2>
+    <p>Enter your details to RSVP:</p>
     <input type="text" id="name" placeholder="Your Name" /><br>
     <input type="tel" id="phone" placeholder="Your Phone Number" /><br>
     <button onclick="submitRSVP()">RSVP</button>
@@ -71,41 +63,14 @@
     <p><strong>🎉 Join the WhatsApp group:</strong><br>
       <a class="blue" href="https://chat.whatsapp.com/Ge9tZ5W0jiA5nOW6tdeWRI" target="_blank">Click here to join</a>
     </p>
-    <div id="shareCodeDiv" class="hidden">
+    <div id="shareCodeDiv">
       <p><strong>Send this code to your invitee:</strong><br>
       <span class="blue" id="nextCodeDisplay"></span></p>
     </div>
-    <p id="noCodeError" style="color: red; font-weight: bold;" class="hidden">Sorry, there are no more codes available to pass on.</p>
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxO-ffXc6d4C7VvWIuPAQwX-E8vqvnnzKlgPR3xargd2s4UITwjvOYtOTrCL6lejR2L/exec";
-    let isSpecialCode = false;
-    let reservedNextCode = null;
-
-    function verifyCode() {
-      const code = document.getElementById("accessCode").value.trim();
-      if (!code) return;
-
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "verify", code })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "valid") {
-          isSpecialCode = data.isSpecial || false;
-          reservedNextCode = data.nextCode || null;
-          document.getElementById("codeSection").classList.add("hidden");
-          document.getElementById("rsvpSection").classList.remove("hidden");
-        } else {
-          document.getElementById("codeError").innerText = data.message || "Invalid code.";
-        }
-      })
-      .catch(() => {
-        document.getElementById("codeError").innerText = "Error processing request.";
-      });
-    }
+    const scriptURL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec";
 
     function submitRSVP() {
       const name = document.getElementById("name").value.trim();
@@ -117,20 +82,16 @@
 
       fetch(scriptURL, {
         method: 'POST',
-        body: JSON.stringify({ action: "rsvp", name, phone, isSpecial: isSpecialCode })
+        body: JSON.stringify({ action: "rsvp", name, phone })
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById("rsvpSection").classList.add("hidden");
-        document.getElementById("finalSection").classList.remove("hidden");
-
-        if (reservedNextCode || data.nextCode) {
-          const nextCode = reservedNextCode || data.nextCode;
-          document.getElementById("nextCodeDisplay").innerText = nextCode;
-          document.getElementById("shareCodeDiv").classList.remove("hidden");
-          document.getElementById("noCodeError").classList.add("hidden");  // Hide the error if there's a valid next code
+        if (data.status === "ok") {
+          document.getElementById("rsvpSection").classList.add("hidden");
+          document.getElementById("finalSection").classList.remove("hidden");
+          document.getElementById("nextCodeDisplay").innerText = data.code || "Error generating code.";
         } else {
-          document.getElementById("noCodeError").classList.remove("hidden");  // Show error if no code available
+          document.getElementById("rsvpError").innerText = data.message || "Submission failed.";
         }
       })
       .catch(() => {
